@@ -33,70 +33,192 @@ public class UserAuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
+
     public void createAccount(RegisterRequest request) {
 
-        Optional<User> existingUser =
-                userRepository.findByEmail(request.getEmail());
+        try {
+            System.out.println("========== CREATE ACCOUNT STARTED ==========");
 
-        // Case 1: User already exists and email is verified
-        if (existingUser.isPresent()
-                && existingUser.get().isEmailVerified()) {
+            // STEP 1: Check whether email already exists
+            Optional<User> existingUser;
+
+            try {
+                existingUser = userRepository.findByEmail(request.getEmail());
+                System.out.println("STEP 1 SUCCESS: Email lookup completed");
+
+            } catch (Exception e) {
+                System.err.println("STEP 1 FAILED: Database email lookup");
+                e.printStackTrace();
+
+                throw new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Unable to check existing user."
+                );
+            }
+
+            // STEP 2: Check whether user is already verified
+            if (existingUser.isPresent()
+                    && existingUser.get().isEmailVerified()) {
+
+                System.out.println("STEP 2: User already verified");
+
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "User already exists. Please login."
+                );
+            }
+
+            // STEP 3: Generate verification code
+            String code;
+
+            try {
+                code = String.format(
+                        "%06d",
+                        new SecureRandom().nextInt(1_000_000)
+                );
+
+                System.out.println("STEP 3 SUCCESS: Verification code generated");
+
+            } catch (Exception e) {
+                System.err.println("STEP 3 FAILED: Code generation");
+                e.printStackTrace();
+
+                throw new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Unable to generate verification code."
+                );
+            }
+
+            // STEP 4: Existing but unverified user
+            if (existingUser.isPresent()) {
+
+                User user = existingUser.get();
+
+                try {
+                    user.setVerificationCode(code);
+                    user.setVerificationCodeExpiry(
+                            LocalDateTime.now().plusMinutes(10)
+                    );
+
+                    userRepository.save(user);
+
+                    System.out.println("STEP 4 SUCCESS: Existing user updated");
+
+                } catch (Exception e) {
+                    System.err.println("STEP 4 FAILED: Updating existing user");
+                    e.printStackTrace();
+
+                    throw new ResponseStatusException(
+                            HttpStatus.INTERNAL_SERVER_ERROR,
+                            "Unable to update existing user."
+                    );
+                }
+
+                // STEP 5: Send verification email
+                try {
+                    emailService.sendVerificationCode(
+                            user.getEmail(),
+                            code
+                    );
+
+                    System.out.println("STEP 5 SUCCESS: Verification email sent");
+
+                } catch (Exception e) {
+                    System.err.println("STEP 5 FAILED: Sending verification email");
+                    e.printStackTrace();
+
+                    throw new ResponseStatusException(
+                            HttpStatus.INTERNAL_SERVER_ERROR,
+                            "Unable to send verification email."
+                    );
+                }
+
+                System.out.println("========== CREATE ACCOUNT COMPLETED ==========");
+                return;
+            }
+
+            // STEP 6: Create new user
+            User user = new User();
+
+            try {
+                user.setName(request.getName());
+                user.setEmail(request.getEmail());
+                user.setPassword(
+                        passwordEncoder.encode(request.getPassword())
+                );
+                user.setPhone(request.getPhone());
+                user.setEmailVerified(false);
+                user.setVerificationCode(code);
+                user.setVerificationCodeExpiry(
+                        LocalDateTime.now().plusMinutes(10)
+                );
+
+                System.out.println("STEP 6 SUCCESS: User object created");
+
+            } catch (Exception e) {
+                System.err.println("STEP 6 FAILED: Creating user object");
+                e.printStackTrace();
+
+                throw new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Unable to prepare user account."
+                );
+            }
+
+            // STEP 7: Save user in database
+            try {
+                userRepository.save(user);
+
+                System.out.println("STEP 7 SUCCESS: User saved to database");
+
+            } catch (Exception e) {
+                System.err.println("STEP 7 FAILED: Saving user to database");
+                e.printStackTrace();
+
+                throw new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Unable to save user."
+                );
+            }
+
+            // STEP 8: Send verification email
+            try {
+                emailService.sendVerificationCode(
+                        user.getEmail(),
+                        code
+                );
+
+                System.out.println("STEP 8 SUCCESS: Verification email sent");
+
+            } catch (Exception e) {
+                System.err.println("STEP 8 FAILED: Sending verification email");
+                e.printStackTrace();
+
+                throw new ResponseStatusException(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Unable to send verification email."
+                );
+            }
+
+            System.out.println("========== CREATE ACCOUNT COMPLETED ==========");
+
+        } catch (ResponseStatusException e) {
+
+            // Preserve intentional HTTP errors (409, 500, etc.)
+            throw e;
+
+        } catch (Exception e) {
+
+            System.err.println("UNEXPECTED ERROR IN CREATE ACCOUNT");
+            e.printStackTrace();
 
             throw new ResponseStatusException(
-                    HttpStatus.CONFLICT,
-                    "User already exists. Please login."
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Unexpected error while creating account."
             );
         }
-
-        // Generate a 6-digit verification code
-        String code = String.format(
-                "%06d",
-                new SecureRandom().nextInt(1_000_000)
-        );
-
-        // Case 2: User exists but email is not verified
-        if (existingUser.isPresent()) {
-
-            User user = existingUser.get();
-
-            user.setVerificationCode(code);
-            user.setVerificationCodeExpiry(
-                    LocalDateTime.now().plusMinutes(10)
-            );
-
-            userRepository.save(user);
-
-            emailService.sendVerificationCode(
-                    user.getEmail(),
-                    code
-            );
-
-            return;
-        }
-
-        // Case 3: User does not exist — create a new user
-        User user = new User();
-
-        user.setName(request.getName());
-        user.setEmail(request.getEmail());
-        user.setPassword(
-                passwordEncoder.encode(request.getPassword())
-        );
-        user.setPhone(request.getPhone());
-        user.setEmailVerified(false);
-        user.setVerificationCode(code);
-        user.setVerificationCodeExpiry(
-                LocalDateTime.now().plusMinutes(10)
-        );
-
-        userRepository.save(user);
-
-        // Send the verification email
-        emailService.sendVerificationCode(
-                user.getEmail(),
-                code
-        );
     }
+
 
 
     public ResponseEntity<?> verifyAccount(VerifyEmailRequest request) {

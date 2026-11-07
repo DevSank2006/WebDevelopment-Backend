@@ -16,11 +16,18 @@ public class EmailService {
 
     private final RestClient restClient;
 
-    @Value("${resend.api.key}")
-    private String resendApiKey;
+//    @Value("${resend.api.key}")
+//    private String resendApiKey;
+//
+//    @Value("${app.mail.from}")
+//    private String fromEmail;
 
-    @Value("${app.mail.from}")
-    private String fromEmail;
+
+    private String resendApiKey="re_Rb8gpQVa_HuYFdB8NzDhmVVjM6mJaWXhV";
+
+
+    private String fromEmail="support@mail.inoviqtech.in";
+
 
     public EmailService() {
         this.restClient = RestClient.create();

@@ -32,6 +32,8 @@ public class UserAuthController {
     @PostMapping("/register")
     public ResponseEntity<?> createAccount(
             @RequestBody RegisterRequest request) {
+        System.out.println("========== REGISTER CONTROLLER HIT ==========");
+        System.out.println("EMAIL = " + request.getEmail());
         // Create account and send verification code
         userAuthService.createAccount(request);
         return ResponseEntity.ok(
