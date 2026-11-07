@@ -23,7 +23,7 @@ public class EmailService {
 //    private String fromEmail;
 
 
-    private String resendApiKey="re_Rb8gpQVa_HuYFdB8NzDhmVVjM6mJaWXhV";
+    private String resendApiKey="re_HkQmTcNN_643ru4zfc7HkSw9WCAFwG3pT";
 
 
     private String fromEmail="support@mail.inoviqtech.in";
