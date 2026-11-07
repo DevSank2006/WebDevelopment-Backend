@@ -23,17 +23,28 @@ public class EmailService {
 //    private String fromEmail;
 
 
-    private String resendApiKey="re_HkQmTcNN_643ru4zfc7HkSw9WCAFwG3pT";
 
 
-    private String fromEmail="support@mail.inoviqtech.in";
+    @Value("${RESEND_API_KEY}")
+    private String resendApiKey;
+
+    @Value("${MAIL_FROM}")
+    private String mailFrom;
+
+
 
 
     public EmailService() {
         this.restClient = RestClient.create();
+
     }
 
+
     public void sendVerificationCode(String email, String code) {
+
+        System.out.println(resendApiKey);
+        System.out.println(mailFrom);
+
 
         String htmlContent = """
                 <!DOCTYPE html>
@@ -133,7 +144,7 @@ public class EmailService {
                     )
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(Map.of(
-                            "from", fromEmail,
+                            "from", mailFrom,
                             "to", List.of(email),
                             "subject", "Verify Your Email | AnantPlus",
                             "html", htmlContent,
