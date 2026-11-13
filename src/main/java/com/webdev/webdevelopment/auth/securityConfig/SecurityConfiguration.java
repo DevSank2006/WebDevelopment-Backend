@@ -70,7 +70,8 @@ public class SecurityConfiguration {
         CorsConfiguration configuration = new CorsConfiguration();
 
         configuration.setAllowedOrigins(
-                List.of("http://localhost:5173")
+                List.of("http://localhost:5173",
+                        "https://web-development-two-plum.vercel.app")
         );
 
         configuration.setAllowedMethods(
