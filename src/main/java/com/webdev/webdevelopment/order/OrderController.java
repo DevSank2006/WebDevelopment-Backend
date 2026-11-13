@@ -9,6 +9,9 @@ import java.util.List;
 
 
 @RestController
+@CrossOrigin(origins =
+        {"http://localhost:5173",
+                "https://web-development-two-plum.vercel.app"})
 @RequestMapping("/api/orders")
 public class OrderController {
     private final OrderService orderService;

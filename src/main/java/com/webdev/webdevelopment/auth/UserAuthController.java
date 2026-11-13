@@ -13,7 +13,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.AuthenticationException;
 
-@CrossOrigin(origins = "http://localhost:5173")
+@CrossOrigin(origins =
+        {"http://localhost:5173",
+                "https://web-development-two-plum.vercel.app"})
+
 @RestController
 @RequestMapping("/auth")
 public class UserAuthController {

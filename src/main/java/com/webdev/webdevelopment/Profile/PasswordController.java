@@ -2,13 +2,13 @@ package com.webdev.webdevelopment.Profile;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 
 @RestController
+@CrossOrigin(origins =
+        {"http://localhost:5173",
+                "https://web-development-two-plum.vercel.app"})
 @RequestMapping("/profile/password")
 @RequiredArgsConstructor
 public class PasswordController {
